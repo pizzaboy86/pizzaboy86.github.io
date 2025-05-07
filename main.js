@@ -246,6 +246,7 @@ function updateScreen() {
   document.getElementById("regen").innerHTML = "Regen: " + stats.regen
   // HUD
   document.getElementById("plrHealth").innerHTML = hp + " / " + stats.maxHealth
+  document.getElementById("stage").innerHTML = "Stage: " + stage
   document.getElementById("beast").src = activeBeast.Img
   document.getElementById("beastName").innerHTML = activeBeast.Name
   document.getElementById("beastHealth").innerHTML = activeBeast.health + " HP"
