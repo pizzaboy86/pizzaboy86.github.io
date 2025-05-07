@@ -1,8 +1,8 @@
-'use strict'
+'use strict';
 var statPoints = 0
 var currentMenu = 0
 var stage = 1
-var difficulty = stage
+var difficulty = Math.floor(stage / 10) + 1
 var hp = 100
 var baseStats = {
   damage: 1,
@@ -80,7 +80,7 @@ function dropLoot() {
   if (pointRoll == 1) {
     statPoints++
   }
-  
+  stage++
   updateScreen()
 }
 
@@ -239,8 +239,7 @@ function updateScreen() {
   // Stats
   document.getElementById("points").innerHTML = "Points: " + statPoints
   document.getElementById("damage").innerHTML = "Damage: " + stats.damage
-  document.getElementById("atkSpeed").innerHTML =
-    "Attack Speed: " + stats.atkSpeed
+  document.getElementById("atkSpeed").innerHTML = "Attack Speed: " + stats.atkSpeed
   document.getElementById("health").innerHTML = "Health: " + stats.maxHealth
   document.getElementById("defense").innerHTML = "Defense: " + stats.defense
   document.getElementById("regen").innerHTML = "Regen: " + stats.regen
@@ -292,7 +291,7 @@ function updateStats() {
       }
     })
   })
-  difficulty = stage
+  difficulty = Math.floor(stage / 10) + 1
 }
 updateStats()
 updateScreen()
