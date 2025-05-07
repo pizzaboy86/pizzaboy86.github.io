@@ -2,7 +2,7 @@
 var statPoints = 0
 var currentMenu = 0
 var stage = 1
-var difficulty = Math.floor(stage / 10) + 1
+var difficulty = stage
 var hp = 100
 var baseStats = {
   damage: 1,
@@ -292,7 +292,7 @@ function updateStats() {
       }
     })
   })
-  difficulty = Math.floor(stage / 10) + 1
+  difficulty = stage
 }
 updateStats()
 updateScreen()
