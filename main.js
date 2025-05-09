@@ -28,24 +28,26 @@ var rarities = [
 var beasts = [
   {
     Name: "Gargoyle",
-    Img: "",
+    Img: "imgs/gargoyle.jpg",
   },
   {
     Name: "Slime",
-    Img: "",
+    Img: "imgs/slime.jpeg",
   },
   {
     Name: "Werewolf",
-    Img: "",
+    Img: "imgs/werewolf.jpeg",
   },
   {
     Name: "Skeleton",
-    Img: "",
+    Img: "imgs/skeleton.webp",
   },
-  {
+]
+var bosses = [
+    {
     Name: "Bloop",
-    Img: "",
-  },
+    Img: "imgs/bloop.webp",
+    },
 ]
 var activeBeast = genBeast()
 var items = [
@@ -69,10 +71,16 @@ var equipped = {
 }
 
 function randomInt(highest) {
-  return Math.floor(Math.random() * highest) + 1
+  return Math.floor(Math.random() * highest)+1
 }
 
-function dropLoot() {
+function dropLoot(boss) {
+  if (boss) {
+     for (let i = 0; i < difficulty * 3; i++) {
+    inv.push(genItem())
+    }
+    statPoints++
+  } else {
   for (let i = 0; i < difficulty; i++) {
     inv.push(genItem())
   }
@@ -80,6 +88,7 @@ function dropLoot() {
   if (pointRoll == 1) {
     statPoints++
   }
+}
   stage++
   updateScreen()
 }
@@ -164,17 +173,23 @@ function respawnBeast() {
   },100)
 }
 
+var regenCounter = 0
 var regenLoop = setInterval(
   function () {
-  hp = hp + 1
-    if (hp > stats.maxHealth) {
-    hp = stats.maxHealth
+  regenCounter++
+    if (regenCounter > (10000/stats.regen)) {
+      hp = hp + 1
+      if (hp > stats.maxHealth) {
+      hp = stats.maxHealth
+      regenCounter = 0
+      }
     }
-  }, (10000 / stats.regen)
+  document.getElementById("plrHealth").innerHTML = hp + " / " + stats.maxHealth
+  }, (1)
 )
 
 function genItem() {
-  var rarityOdd = randomInt(100) / difficulty
+  var rarityOdd = randomInt(100)
   var chosenAtt
   for (let i = 0; i < rarities.length; i++) {
     if (rarityOdd / 100 >= 1 / rarities[i].Odds) {
@@ -197,7 +212,22 @@ function genItem() {
 
 function genBeast() {
   var hardness = randomInt(5 * difficulty)
-  var beastRoll = beasts[randomInt(beasts.length - 1)]
+  var bossRoll = randomInt(25)
+  console.log(bossRoll)
+  if (bossRoll == 1) {
+    var beastRoll = bosses[randomInt(bosses.length - 1) -1]
+    hardness = hardness * 3
+    var newBeast = {
+    Name: "LVL " + hardness + " Boss " + beastRoll.Name,
+    Img: beastRoll.Img,
+    damage: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
+    atkSpeed: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
+    health: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
+    defense: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
+  }
+  return newBeast
+  } else {
+  var beastRoll = beasts[randomInt(beasts.length - 1) - 1]
   var newBeast = {
     Name: "LVL " + hardness + " " + beastRoll.Name,
     Img: beastRoll.Img,
@@ -207,6 +237,7 @@ function genBeast() {
     defense: roundTo(randomArbit(1, 1.1 * hardness), 2),
   }
   return newBeast
+  }
 }
 
 function updateMenu(menu) {
@@ -225,14 +256,32 @@ function updateMenu(menu) {
 
 function equipItem(cell) {
   var toEquip = inv[cell]
-  if (toEquip) {
+  if (toEquip && equipped[toEquip.Name]) {
+    var moddedSlot = document.getElementById("invSlot" + cell)
+    var storedName = moddedSlot.innerHTML
+      moddedSlot.innerHTML = "Are You Sure? This will replace your existing " + toEquip.Name
+      moddedSlot.removeAttribute("onClick")
+      moddedSlot.addEventListener("click", function() {
+        equipped[toEquip.Name] = toEquip
+        inv.splice(cell, 1)
+        updateScreen()
+        updateStats()
+      })
+    x = setTimeout(function(){
+        moddedSlot.removeEventListener("click", function() {
+        equipped[toEquip.Name] = toEquip
+        inv.splice(cell, 1)
+      })
+        moddedSlot.setAttribute("onClick", "javascript: equipItem(" + cell + ")")
+        moddedSlot.style["background-color"] = findRarity(toEquip.Rarity).Color
+        moddedSlot.innerHTML = storedName
+    },50000)
+  } else {
     equipped[toEquip.Name] = toEquip
     inv.splice(cell, 1)
-  } else {
-    console.warn("Nothing in that slot!")
+    updateScreen()
+    updateStats()
   }
-  updateScreen()
-  updateStats()
 }
 
 function updateScreen() {
@@ -255,8 +304,14 @@ function updateScreen() {
     var displayed = inv[i]
     var box = document.createElement("div")
     document.getElementById("menu2").append(box)
+    box.id = "invSlot" + i
     box.setAttribute("onClick", "javascript: equipItem(" + i + ")")
-    box.innerHTML = i + 1 + ". " + displayed.Rarity + " " + displayed.Name
+    box.innerHTML = i + 1 + ". " + displayed.Rarity + " " + displayed.Name 
+      + "   +%" + (Math.round(displayed.damage*100-100)) + " Damage"
+      + "   +%" + (Math.round(displayed.atkSpeed*100-100)) + " AtkSpeed"
+      + "   +%" + (Math.round(displayed.maxHealth*100-100)) + " MaxHP"
+      + "   +%" + (Math.round(displayed.defense*100-100)) + " Defense"
+      + "   +%" + (Math.round(displayed.regen*100-100)) + " Regen"
     box.style = "background-color: " + findRarity(displayed.Rarity).Color
   }
   // Equipped
@@ -266,10 +321,18 @@ function updateScreen() {
       var box = document.createElement("div")
       document.getElementById("menu3").append(box)
       box.innerHTML = itemObj.Rarity +" "+ itemObj.Name
+        + "   +%" + (Math.round(itemObj.damage*100-100)) + " Damage"
+        + "   +%" + (Math.round(itemObj.atkSpeed*100-100)) + " AtkSpeed"
+        + "   +%" + (Math.round(itemObj.maxHealth*100-100)) + " MaxHP"
+        + "   +%" + (Math.round(itemObj.defense*100-100)) + " Defense"
+        + "   +%" + (Math.round(itemObj.regen*100-100)) + " Regen"
       box.style = "background-color: " + findRarity(itemObj.Rarity).Color
+      box.className = "itemSlot"
     }
   })
 }
+
+
 
 function findRarity(rare) {
   for (let i = 0; i < rarities.length; i++) {
