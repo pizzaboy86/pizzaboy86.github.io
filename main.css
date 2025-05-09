@@ -15,3 +15,13 @@
 .menuButton {
     cursor:pointer;
 }
+.change {
+  transform: scale(2);
+  opacity: 1;
+}
+.hoverbox {
+    display:none
+}
+.itemSlot:hover + .hoverbox {
+    display:block
+}
