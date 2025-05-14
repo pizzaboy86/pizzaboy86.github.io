@@ -42,12 +42,58 @@ var beasts = [
     Name: "Skeleton",
     Img: "imgs/skeleton.webp",
   },
+  {
+    Name: "Ghoul",
+    Img: "imgs/ghoul.webp"
+  },
+  {
+    Name: "Goblin",
+    Img: "imgs/goblin.jpeg"
+  },
+  {
+    Name: "Chest Mimic",
+    Img: "imgs/chestmimic.png"
+  },
+  {
+    Name: "Evil Gnome",
+    Img: "imgs/gnome.jpeg"
+  },
+  {
+    Name: "Spider",
+    Img: "imgs/spider.jpeg"
+  },
+  {
+    Name: "Clay Golem",
+    Img: "imgs/golem.jpeg"
+  }
 ]
 var bosses = [
     {
     Name: "Bloop",
     Img: "imgs/bloop.webp",
     },
+    {
+      Name: "Troll Squadron",
+      Img: "imgs/trollsquad.jpg"
+    },
+    {
+      Name: "Dragon",
+      Img: "imgs/dragon.jpg"
+    },
+    {
+      Name: "Desert Wurm",
+      Img: "imgs/wurm.jpeg"
+    }
+]
+var treasureBeast = [
+  {
+    Name: "Slenderman",
+    Img: "imgs/slenderman.webp"
+  },
+  {
+    Name: "Leprechaun",
+    Img: "imgs/leprechaun.webp"
+  }
 ]
 var activeBeast = genBeast()
 var items = [
@@ -222,7 +268,7 @@ function genBeast() {
     Img: beastRoll.Img,
     damage: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
     atkSpeed: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
-    health: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
+    health: 5*roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
     defense: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
   }
   return newBeast
@@ -233,7 +279,7 @@ function genBeast() {
     Img: beastRoll.Img,
     damage: roundTo(randomArbit(1, 1.1 * hardness), 2),
     atkSpeed: roundTo(randomArbit(1, 1.1 * hardness), 2),
-    health: roundTo(randomArbit(1, 1.1 * hardness), 2),
+    health: 5*roundTo(randomArbit(1, 1.1 * hardness), 2),
     defense: roundTo(randomArbit(1, 1.1 * hardness), 2),
   }
   return newBeast
@@ -251,6 +297,16 @@ function updateMenu(menu) {
     }
     currentMenu = menu
     document.getElementById("menu" + currentMenu).style.display = "block"
+  }
+}
+
+function scrapInv() {
+  for (i=0; i<inv.length;i++) {
+    var scrapRoll = randomInt(10)
+    if (scrapRoll == 1) {
+      statPoints++
+    }
+    inv.splice(0,1)
   }
 }
 
