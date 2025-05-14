@@ -1,360 +1,106 @@
 'use strict';
-var statPoints = 0
-var currentMenu = 0
-var stage = 1
-var difficulty = Math.floor(stage / 10) + 1
-var hp = 100
-var baseStats = {
-  damage: 1,
-  atkSpeed: 1,
-  maxHealth: 100,
-  defense: 1,
-  regen: 1,
+var items = [
+  { Color: "Lightgray", Value: 1, Odds: 2 },
+  { Color: "Green", Value: 2, Odds: 4 },
+  { Color: "Blue", Value: 3.5, Odds: 12 },
+  { Color: "Red", Value: 5, Odds: 48 },
+  { Color: "Gold", Value: 10, Odds: 100 }
+]
+var rewards = [
+  { Name: "<span style='color:Gold'>Jackpot!</span>", Value: 30, Tag: "jackpot"},
+  { Name: "<span style='color:Red'>Minipot!</span>", Value: 20, Tag: "minipot"},
+  { Name: "<span style='color:Blue'>Bananza!</span>", Value: 13.5, Tag: "bananza"},
+  { Name: "<span style='color:Green'>Deluxe!</span>", Value: 10, Tag: "deluxe"}
+]
+var slots = {
+  slot1: undefined,
+  slot2: undefined,
+  slot3: undefined
 }
 var stats = {
-  damage: 1,
-  atkSpeed: 1,
-  maxHealth: 100,
-  defense: 1,
-  regen: 1,
+  rolls: 0,
+  jackpot: 0,
+  minipot: 0,
+  bananza: 0,
+  deluxe: 0,
+  best: 0,
 }
-var rarities = [
-  { Name: "Common", Odds: 2, mod: 1, Color: "Grey" },
-  { Name: "Uncommon", Odds: 4, mod: 1.2, Color: "Green" },
-  { Name: "Rare", Odds: 8, mod: 1.75, Color: "Blue" },
-  { Name: "Epic", Odds: 32, mod: 2.5, Color: "Red" },
-  { Name: "Legendary", Odds: 100, mod: 5, Color: "Gold" },
-]
-var beasts = [
-  {
-    Name: "Gargoyle",
-    Img: "imgs/gargoyle.jpg",
-  },
-  {
-    Name: "Slime",
-    Img: "imgs/slime.jpeg",
-  },
-  {
-    Name: "Werewolf",
-    Img: "imgs/werewolf.jpeg",
-  },
-  {
-    Name: "Skeleton",
-    Img: "imgs/skeleton.webp",
-  },
-]
-var bosses = [
-    {
-    Name: "Bloop",
-    Img: "imgs/bloop.webp",
-    },
-]
-var activeBeast = genBeast()
-var items = [
-  "Helmet",
-  "Chestplate",
-  "Leggings",
-  "Boots",
-  "Sword",
-  "Amulet",
-  "Ring",
-]
-var inv = []
-var equipped = {
-  Helmet: undefined,
-  Chestplate: undefined,
-  Leggings: undefined,
-  Boots: undefined,
-  Sword: undefined,
-  Amulet: undefined,
-  Ring: undefined,
-}
-
-function randomInt(highest) {
-  return Math.floor(Math.random() * highest)+1
-}
-
-function dropLoot(boss) {
-  if (boss) {
-     for (let i = 0; i < difficulty * 3; i++) {
-    inv.push(genItem())
-    }
-    statPoints++
-  } else {
-  for (let i = 0; i < difficulty; i++) {
-    inv.push(genItem())
+async function roll() {
+  document.getElementById("output").innerHTML = ""
+  document.getElementById("btn").removeAttribute("onClick")
+  var points = 0
+  stats.rolls++
+  for (let i = 0; i < 3; i++) {
+    swapColors(i + 1);
+    await wait(250)
   }
-  var pointRoll = randomInt(5)
-  if (pointRoll == 1) {
-    statPoints++
+  await wait(1000)
+  for (let i=1;i<4;i++) {
+    points = points + slots["slot" + i].Value
   }
-}
-  stage++
-  updateScreen()
-}
-
-function randomArbit(min, max) {
-  return Math.random() * (max - min) + min
-}
-
-function allocatePoint(stat) {
-  if (statPoints > 0) {
-    baseStats[stat] = roundTo(baseStats[stat] * 1.2, 2)
-    statPoints--
-  } else {
-    console.warn("Not Enough Stat Points!")
-  }
-  updateScreen()
-  updateStats()
-}
-
-function roundTo(n, digits) {
-  if (digits === undefined) {
-    digits = 0
-  }
-  var multiplicator = Math.pow(10, digits)
-  n = parseFloat((n * multiplicator).toFixed(11))
-  var test = Math.round(n) / multiplicator
-  return +test.toFixed(digits)
-}
-
-function hurt(dmg) {
-  // player gets hurt
-  console.log("hurt")
-  hp = roundTo(hp - Math.max(dmg/ stats.defense, 0),2)
-  if (hp <= 0) {
-  console.warn("died")
-   Object.entries(equipped).forEach(([itemName, itemObj]) => {
-   	equipped[itemName] = undefined
-   })
-  hp = stats.maxHealth
-  }
-  updateScreen()
-}
-
-function attack() {
-  // monster gets hurt
-    activeBeast.health = roundTo(activeBeast.health - stats.damage,2)
-    if (activeBeast.health <= 0) {
-      respawnBeast()
-      dropLoot()
-    }
-    updateScreen()
-    updateStats()
- 		document.getElementById("beast").removeAttribute("onClick")
-   let x = setTimeout(function () {
-     document.getElementById("beast").setAttribute("onClick", "javascript: attack() ")
-   }, 1000 / stats.atkSpeed)
-}
-
-var hurtCooldown = 10/activeBeast.atkSpeed
-let hurtCd = setInterval(function() {
-	hurtCooldown = hurtCooldown - 0.1
-  if (hurtCooldown <= 0 ) {
-  	hurt(activeBeast.damage)
-    hurtCooldown = 10/activeBeast.atkSpeed
-    updateScreen()
-  }
-  document.getElementById("beastAttack").innerHTML = roundTo(hurtCooldown,1)
-  },100)
-  
-function respawnBeast() {
-  activeBeast = genBeast()
-  clearInterval(hurtCd)
-  hurtCooldown = 10/activeBeast.atkSpeed
-  hurtCd = setInterval(function() {
-	hurtCooldown = hurtCooldown - 0.1
-  if (hurtCooldown <= 0 ) {
-  	hurt(activeBeast.damage)
-    hurtCooldown = 10/activeBeast.atkSpeed
-    updateScreen()
-  }
-  document.getElementById("beastAttack").innerHTML = roundTo(hurtCooldown,1)
-  },100)
-}
-
-var regenCounter = 0
-var regenLoop = setInterval(
-  function () {
-  regenCounter++
-    if (regenCounter > (10000/stats.regen)) {
-      hp = hp + 1
-      if (hp > stats.maxHealth) {
-      hp = stats.maxHealth
-      regenCounter = 0
-      }
-    }
-  document.getElementById("plrHealth").innerHTML = hp + " / " + stats.maxHealth
-  }, (1)
-)
-
-function genItem() {
-  var rarityOdd = randomInt(100)
-  var chosenAtt
-  for (let i = 0; i < rarities.length; i++) {
-    if (rarityOdd / 100 >= 1 / rarities[i].Odds) {
-      chosenAtt = rarities[i]
+  for (let i=0; i<rewards.length;i++) {
+    if(rewards[i].Value <= points) {
+      document.getElementById("output").innerHTML = rewards[i].Name
+      stats[rewards[i].Tag]++
       break
     }
   }
-  var itemRoll = items[randomInt(items.length - 1)]
-  var newItem = {
-    Name: itemRoll,
-    Rarity: chosenAtt.Name,
-    damage: roundTo(randomArbit(1, 1.1 * chosenAtt.mod), 2),
-    atkSpeed: roundTo(randomArbit(1, 1.1 * chosenAtt.mod), 2),
-    maxHealth: roundTo(randomArbit(1, 1.1 * chosenAtt.mod), 2),
-    defense: roundTo(randomArbit(1, 1.1 * chosenAtt.mod), 2),
-    regen: roundTo(randomArbit(1, 1.1 * chosenAtt.mod), 2),
+  if (points > stats.best) {
+    stats.best = points
   }
-  return newItem
+  document.getElementById("btn").innerHTML = points
+  document.getElementById("btn").setAttribute("onClick", "javascript:roll()")
+  updateScreen()
 }
 
-function genBeast() {
-  var hardness = randomInt(5 * difficulty)
-  var bossRoll = randomInt(25)
-  console.log(bossRoll)
-  if (bossRoll == 1) {
-    var beastRoll = bosses[randomInt(bosses.length - 1) -1]
-    hardness = hardness * 3
-    var newBeast = {
-    Name: "LVL " + hardness + " Boss " + beastRoll.Name,
-    Img: beastRoll.Img,
-    damage: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
-    atkSpeed: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
-    health: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
-    defense: roundTo(randomArbit(1 * hardness, 1.75 * hardness), 2),
-  }
-  return newBeast
-  } else {
-  var beastRoll = beasts[randomInt(beasts.length - 1) - 1]
-  var newBeast = {
-    Name: "LVL " + hardness + " " + beastRoll.Name,
-    Img: beastRoll.Img,
-    damage: roundTo(randomArbit(1, 1.1 * hardness), 2),
-    atkSpeed: roundTo(randomArbit(1, 1.1 * hardness), 2),
-    health: roundTo(randomArbit(1, 1.1 * hardness), 2),
-    defense: roundTo(randomArbit(1, 1.1 * hardness), 2),
-  }
-  return newBeast
-  }
+async function swapColors(slot) {
+  var counter = 0;
+  return new Promise(resolve => {
+    var x = setInterval(function() {
+      counter++;
+      document.getElementById("slot" + slot).style["background-color"] = items[randomInt(items.length)-1].Color;
+      if (counter >= 250) {
+        var rarity = randomInt(100)
+          for(let i=0; i<items.length;i++) {
+             if (rarity / 100 >= 1 / items[i].Odds) {
+              document.getElementById("slot" + slot).style["background-color"] = items[i].Color
+              slots["slot" + slot] = items[i]
+              document.getElementById("slot" + slot).innerHTML = slots["slot" + slot].Value
+              break
+            }
+          }
+        clearInterval(x);
+        resolve();
+      }  
+    }, 5);
+  });
 }
 
-function updateMenu(menu) {
-  if (currentMenu == menu) {
-    document.getElementById("menu" + currentMenu).style.display = "none"
-    currentMenu = 0
-  } else {
-    var toClose = document.getElementsByClassName("menu")
-    for (let i = 0; i < toClose.length; i++) {
-      toClose[i].style.display = "none"
-    }
-    currentMenu = menu
-    document.getElementById("menu" + currentMenu).style.display = "block"
-  }
+function randomInt(highest) {
+  return Math.floor(Math.random() * highest) + 1;
 }
 
-function equipItem(cell) {
-  var toEquip = inv[cell]
-  if (toEquip && equipped[toEquip.Name]) {
-    var moddedSlot = document.getElementById("invSlot" + cell)
-    var storedName = moddedSlot.innerHTML
-      moddedSlot.innerHTML = "Are You Sure? This will replace your existing " + toEquip.Name
-      moddedSlot.removeAttribute("onClick")
-      moddedSlot.addEventListener("click", function() {
-        equipped[toEquip.Name] = toEquip
-        inv.splice(cell, 1)
-        updateScreen()
-        updateStats()
-      })
-    x = setTimeout(function(){
-        moddedSlot.removeEventListener("click", function() {
-        equipped[toEquip.Name] = toEquip
-        inv.splice(cell, 1)
-      })
-        moddedSlot.setAttribute("onClick", "javascript: equipItem(" + cell + ")")
-        moddedSlot.style["background-color"] = findRarity(toEquip.Rarity).Color
-        moddedSlot.innerHTML = storedName
-    },50000)
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+var open = false
+function stats() {
+  if (open) {
+    document.getElementById("stats").style.display = "none"
+    open = false
   } else {
-    equipped[toEquip.Name] = toEquip
-    inv.splice(cell, 1)
-    updateScreen()
-    updateStats()
+    document.getElementById("stats").style.display = "block"
+    open = true
   }
 }
 
 function updateScreen() {
-  // Stats
-  document.getElementById("points").innerHTML = "Points: " + statPoints
-  document.getElementById("damage").innerHTML = "Damage: " + stats.damage
-  document.getElementById("atkSpeed").innerHTML = "Attack Speed: " + stats.atkSpeed
-  document.getElementById("health").innerHTML = "Health: " + stats.maxHealth
-  document.getElementById("defense").innerHTML = "Defense: " + stats.defense
-  document.getElementById("regen").innerHTML = "Regen: " + stats.regen
-  // HUD
-  document.getElementById("plrHealth").innerHTML = hp + " / " + stats.maxHealth
-  document.getElementById("stage").innerHTML = "Stage: " + stage
-  document.getElementById("beast").src = activeBeast.Img
-  document.getElementById("beastName").innerHTML = activeBeast.Name
-  document.getElementById("beastHealth").innerHTML = activeBeast.health + " HP"
-  // Inventory
-  document.getElementById("menu2").innerHTML = ""
-  for (let i = 0; i < inv.length; i++) {
-    var displayed = inv[i]
-    var box = document.createElement("div")
-    document.getElementById("menu2").append(box)
-    box.id = "invSlot" + i
-    box.setAttribute("onClick", "javascript: equipItem(" + i + ")")
-    box.innerHTML = i + 1 + ". " + displayed.Rarity + " " + displayed.Name 
-      + "   +%" + (Math.round(displayed.damage*100-100)) + " Damage"
-      + "   +%" + (Math.round(displayed.atkSpeed*100-100)) + " AtkSpeed"
-      + "   +%" + (Math.round(displayed.maxHealth*100-100)) + " MaxHP"
-      + "   +%" + (Math.round(displayed.defense*100-100)) + " Defense"
-      + "   +%" + (Math.round(displayed.regen*100-100)) + " Regen"
-    box.style = "background-color: " + findRarity(displayed.Rarity).Color
-  }
-  // Equipped
-  document.getElementById("menu3").innerHTML = ""
-  Object.entries(equipped).forEach(([itemName, itemObj]) => {
-    if (itemObj) {
-      var box = document.createElement("div")
-      document.getElementById("menu3").append(box)
-      box.innerHTML = itemObj.Rarity +" "+ itemObj.Name
-        + "   +%" + (Math.round(itemObj.damage*100-100)) + " Damage"
-        + "   +%" + (Math.round(itemObj.atkSpeed*100-100)) + " AtkSpeed"
-        + "   +%" + (Math.round(itemObj.maxHealth*100-100)) + " MaxHP"
-        + "   +%" + (Math.round(itemObj.defense*100-100)) + " Defense"
-        + "   +%" + (Math.round(itemObj.regen*100-100)) + " Regen"
-      box.style = "background-color: " + findRarity(itemObj.Rarity).Color
-      box.className = "itemSlot"
-    }
-  })
+  document.getElementById("rolls").innerHTML = "Rolls: " + stats.rolls
+  document.getElementById("best").innerHTML = "Best: " + stats.best
+  document.getElementById("jackpots").innerHTML = "Jackpots: " + stats.jackpot
+  document.getElementById("minipots").innerHTML = "Minipots: " + stats.minipot
+  document.getElementById("bananzas").innerHTML = "Bananzas: " + stats.bananza
+  document.getElementById("deluxes").innerHTML = "Deluxes: " + stats.deluxe
 }
-
-
-
-function findRarity(rare) {
-  for (let i = 0; i < rarities.length; i++) {
-    if (rarities[i].Name == rare) {
-      return rarities[i]
-      break
-    }
-  }
-}
-
-function updateStats() {
-  Object.entries(baseStats).forEach(([stat, statVal]) => {
-    stats[stat] = statVal
-  })
-  Object.entries(baseStats).forEach(([stat, statVal]) => {
-    Object.entries(equipped).forEach(([itemName, itemObj]) => {
-      if (itemObj) {
-        stats[stat] = roundTo(stats[stat] * itemObj[stat],2)
-      }
-    })
-  })
-  difficulty = Math.floor(stage / 10) + 1
-}
-updateStats()
 updateScreen()
