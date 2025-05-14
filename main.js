@@ -48,7 +48,7 @@ async function roll() {
   if (points > stats.best) {
     stats.best = points
   }
-  document.getElementById("btn").innerHTML = points
+  document.getElementById("total").innerHTML = points
   document.getElementById("btn").setAttribute("onClick", "javascript:roll()")
   updateScreen()
 }
