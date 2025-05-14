@@ -1,48 +1,18 @@
-<script src="main.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<link href="main.css">
+<script src="/main.js"></script>
+<link href="/main.css">
 
 <body>
-    <h2 id="plrHealth">0 / 0</h2>
-    <h2 id="stage">Stage: </h2>
-    <hr />
-    <p id="beastAttack">0.0</p>
-    <img src="" style="border: 1px solid black; height:220px; width: 350px" onclick="attack()" id="beast">
-    <p id="beastName">Beast</p>
-    <p id="beastHealth">0</p>
-    <hr/>
-    <button onclick="updateMenu(1)" class="menuButton">Stats</button>
-    <button onclick="updateMenu(2)" class="menuButton">Inventory</button>
-    <button onclick="updateMenu(3)" class="menuButton">Equipped</button>
-    <button onclick="updateMenu(4)" class="menuButton">Settings</button>
-    
-    <div id="menu1" class="menu">
-        <p id="points">Points: 0</p>
-        <div style="margin-top: 10px;">
-            <p id="damage" style="display:inline">Damage: </p>
-            <button onclick="allocatePoint('damage')" style="display:inline">[ + ]</button>
-        </div>
-        <div style="margin-top: 10px;">
-            <p id="atkSpeed" style="display:inline">Damage: </p>
-            <button onclick="allocatePoint('atkSpeed')" style="display:inline">[ + ]</button>
-        </div>
-        <div style="margin-top: 10px;">
-            <p id="health" style="display:inline">Damage: </p>
-            <button onclick="allocatePoint('health')" style="display:inline">[ + ]</button>
-        </div>
-        <div style="margin-top: 10px;">
-            <p id="defense" style="display:inline">Damage: </p>
-            <button onclick="allocatePoint('defense')" style="display:inline">[ + ]</button>
-        </div>
-        <div style="margin-top: 10px;">
-            <p id="regen" style="display:inline">Damage: </p>
-            <button onclick="allocatePoint('regen')" style="display:inline">[ + ]</button>
-        </div>
-    </div>
-
-    <div id="menu2" class="menu"></div>
-    <div id="menu3" class="menu"></div>
-
-    <div id="menu4" class="menu">
-    </div>
+    <h2 id="output"></h2>
+    <div id="slot1" style="width:100px;height:100px;border:1px solid black;background-color:lightgray" class="slot"></div>
+    <div id="slot2" style="width:100px;height:100px;border:1px solid black;background-color:lightgray" class="slot"></div>
+    <div id="slot3" style="width:100px;height:100px;border:1px solid black;background-color:lightgray" class="slot"></div>
+    <button id="btn" onclick="roll()">Roll</button>
+    <p id="total"></p>
+    <hr>
+        <p id="rolls"></p>
+        <p id="best"></p>
+        <p id="jackpots"></p>
+        <p id="minipots"><p>
+        <p id="bananzas"></p>
+        <p id="deluxes"></p>
 </body>
