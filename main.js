@@ -24,6 +24,7 @@ var stats = {
   bananza: 0,
   deluxe: 0,
   best: 0,
+  totalEarned: 0
 }
 async function roll() {
   document.getElementById("output").innerHTML = ""
@@ -66,6 +67,7 @@ async function swapColors(slot) {
               document.getElementById("slot" + slot).style["background-color"] = items[i].Color
               slots["slot" + slot] = items[i]
               document.getElementById("slot" + slot).innerHTML = slots["slot" + slot].Value
+              stats.totalEarned = stats.totalEarned + slots["slot" + slot].Value
               break
             }
           }
@@ -98,6 +100,7 @@ function stats() {
 function updateScreen() {
   document.getElementById("rolls").innerHTML = "Rolls: " + stats.rolls
   document.getElementById("best").innerHTML = "Best: " + stats.best
+  document.getElementById("totalEarn").innerHTML = "Total Earned: " + stats.totalEarned
   document.getElementById("jackpots").innerHTML = "Jackpots: " + stats.jackpot
   document.getElementById("minipots").innerHTML = "Minipots: " + stats.minipot
   document.getElementById("bananzas").innerHTML = "Bananzas: " + stats.bananza
