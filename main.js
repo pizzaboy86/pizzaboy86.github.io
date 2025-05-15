@@ -56,7 +56,6 @@ async function roll() {
 
 async function swapColors(slot) {
   var counter = 0;
-  return new Promise(resolve => {
     var x = setInterval(function() {
       counter++;
       document.getElementById("slot" + slot).style["background-color"] = items[randomInt(items.length)-1].Color;
@@ -72,10 +71,8 @@ async function swapColors(slot) {
             }
           }
         clearInterval(x);
-        resolve();
       }  
     }, 5);
-  });
 }
 
 function randomInt(highest) {
