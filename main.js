@@ -83,17 +83,6 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-var open = false
-function stats() {
-  if (open) {
-    document.getElementById("stats").style.display = "none"
-    open = false
-  } else {
-    document.getElementById("stats").style.display = "block"
-    open = true
-  }
-}
-
 function updateScreen() {
   document.getElementById("rolls").innerHTML = "Rolls: " + stats.rolls
   document.getElementById("best").innerHTML = "Best: " + stats.best
@@ -103,4 +92,3 @@ function updateScreen() {
   document.getElementById("bananzas").innerHTML = "Bananzas: " + stats.bananza
   document.getElementById("deluxes").innerHTML = "Deluxes: " + stats.deluxe
 }
-updateScreen()
