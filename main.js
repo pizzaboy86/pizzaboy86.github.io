@@ -4,8 +4,8 @@ function start() {
   //var returnVal = ""
   if (runAmount > 0) {
   for (i=0;i<runAmount;i++) {
-    var num1 = 1
-    var num2 = 1
+    var num1 = Math.random()
+    var num2 = Math.random()
     var result = num1 + num2
     //returnVal = returnVal + result + "\n"
   }
