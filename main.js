@@ -31,9 +31,9 @@ function randomInt(highest) {
 }
 
 var catcher = Bodies.rectangle(400,550,200,20, {isStatic:true, render: {fillStyle:"white", strokeStyle:"gray", lineWidth: 3}, label:"catcher", id: 1001})
-var ground = Bodies.rectangle(400, 800, 5000, 20, {isStatic:true, render: {fillStyle:"red"}, label:"ground"})
+//var ground = Bodies.rectangle(400, 800, 5000, 20, {isStatic:true, render: {fillStyle:"red"}, label:"ground"})
 
-Composite.add(engine.world, [catcher, ground])
+Composite.add(engine.world, catcher)
 
 Events.on(engine, 'collisionStart', function(event) {
   var pairs = event.pairs.slice()
