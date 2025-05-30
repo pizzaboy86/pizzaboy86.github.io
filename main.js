@@ -41,8 +41,8 @@ var spawner = Bodies.circle(100, 50, 30, {isStatic:true, render: {fillStyle:"whi
 Composite.add(engine.world, [catcher, spawner])
 
 for (let i=0;i<4; i++) {
-  var stutter = (i%2)*60
-  var stack = Composites.stack(100+stutter, i*100+150, 8, 1, 80, 0, function(x,y) {
+  var stutter = (i%2)*50
+  var stack = Composites.stack(100+stutter, i*100+150, 8, 1, 60, 0, function(x,y) {
     return Bodies.circle(x,y,20, {isStatic: true, render: {fillStyle:"white"}})
   })
   Composite.add(engine.world, stack)
@@ -64,7 +64,7 @@ Events.on(engine, 'collisionStart', function(event) {
 });
 
 Events.on(mouseConstraint, 'mousedown', function() {// Click Event
-  var newBall = Bodies.circle(mouse.position.x, 50, randomInt(10) + 10,{friction:0.0001})
+  var newBall = Bodies.polygon(mouse.position.x, 50, randomInt(6)+2, randomInt(10)+15, {friction:0.0001})
   Composite.add(engine.world, newBall)
 })
 
