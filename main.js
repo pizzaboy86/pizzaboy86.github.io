@@ -1,39 +1,52 @@
 'use strict';
-    var Engine = Matter.Engine,
-        Render = Matter.Render,
-        Runner = Matter.Runner,
-        Composites = Matter.Composites,
-        Events = Matter.Events,
-        Constraint = Matter.Constraint,
-        MouseConstraint = Matter.MouseConstraint,
-        Mouse = Matter.Mouse,
-        Body = Matter.Body,
-        Composite = Matter.Composite,
-        Bodies = Matter.Bodies;
-
-var engine = Engine.create()
 var score = 0
+var Engine = Matter.Engine, // Define basics
+    Render = Matter.Render,
+    Runner = Matter.Runner,
+    Composites = Matter.Composites,
+    Events = Matter.Events,
+    Constraint = Matter.Constraint,
+    MouseConstraint = Matter.MouseConstraint,
+    Mouse = Matter.Mouse,
+    Body = Matter.Body,
+    Composite = Matter.Composite,
+    Bodies = Matter.Bodies;
+var engine = Engine.create()
 var render = Render.create({
   element : document.body,
   engine : engine,
   options: {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 1100,
+    height: 3000,
     wireframes: false
   }
 })
-
-var lostPoint = 0x0001,
-    gainPoint = 0x0002
+var defaultCat = 0x0001,
+    lostPoint = 0x0002,
+    gainPoint = 0x0003,
+    noCollide = 0x0004
 
 function randomInt(highest) {
   return Math.floor(Math.random() * highest)+1
 }
 
-var catcher = Bodies.rectangle(400,550,200,20, {isStatic:true, render: {fillStyle:"white", strokeStyle:"gray", lineWidth: 3}, label:"catcher", id: 1001})
-//var ground = Bodies.rectangle(400, 800, 5000, 20, {isStatic:true, render: {fillStyle:"red"}, label:"ground"})
 
-Composite.add(engine.world, catcher)
+var mouse = Mouse.create(render.canvas), // Create mouse
+    mouseConstraint = MouseConstraint.create(engine, {mouse: mouse});
+Composite.add(engine.world, mouseConstraint);
+render.mouse = mouse;
+// Static objects
+var catcher = Bodies.rectangle(600,600,80,20, {isStatic:true, render: {fillStyle:"red", strokeStyle:"black", lineWidth: 3}, label:"catcher", id: 1001, collisionFilter: {category: 1}}) 
+var spawner = Bodies.circle(100, 50, 30, {isStatic:true, render: {fillStyle:"white", strokeStyle:"gray", lineWidth: 3}, label:"spawner", id: 1002, collisionFilter: {group: -1, category: 2, mask: 0}})
+Composite.add(engine.world, [catcher, spawner])
+
+for (let i=0;i<4; i++) {
+  var stutter = (i%2)*60
+  var stack = Composites.stack(100+stutter, i*100+150, 8, 1, 80, 0, function(x,y) {
+    return Bodies.circle(x,y,20, {isStatic: true, render: {fillStyle:"white"}})
+  })
+  Composite.add(engine.world, stack)
+}
 
 Events.on(engine, 'collisionStart', function(event) {
   var pairs = event.pairs.slice()
@@ -50,31 +63,14 @@ Events.on(engine, 'collisionStart', function(event) {
   }
 });
 
+Events.on(mouseConstraint, 'mousedown', function() {// Click Event
+  var newBall = Bodies.circle(mouse.position.x, 50, randomInt(10) + 10,{friction:0.0001})
+  Composite.add(engine.world, newBall)
+})
 
-    var mouse = Mouse.create(render.canvas),
-        mouseConstraint = MouseConstraint.create(engine, {
-            mouse: mouse,
-            constraint: {
-                stiffness: 0.2,
-                render: {
-                    visible: false
-                }
-            }
-        });
-
-    Composite.add(engine.world, mouseConstraint);
-
-    // keep the mouse in sync with rendering
-    render.mouse = mouse;
-
-let spawner = setInterval(() => {
-  var newfruit = Bodies.circle(randomInt(1000) + 200, 100, 30, {label:"fruit"})
-  Composite.add(engine.world, newfruit)
-}, 250);
-
-let mover = setInterval(() => {
-  var liveCatcher = Composite.get(engine.world, 1001, "body")
-  Body.setPosition(liveCatcher, {x: mouse.position.x, y: 550})
+let mover = setInterval(() => {// Move Spawner
+  var liveSpawner = Composite.get(engine.world, 1002, "body")
+  Body.setPosition(liveSpawner, {x: mouse.position.x, y: 50})
 }, 10);
 
 Render.run(render)
