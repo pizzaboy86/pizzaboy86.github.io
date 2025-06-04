@@ -26,13 +26,11 @@ function randomInt(highest) {
   return Math.floor(Math.random() * highest)+1
 }
 
-var vertex1 = { x: 95, y: 110 },
-    vertex2 = { x: 105, y: 110 },
-    vertex3 = { x: 100, y: 90 }
 
-
-
-var car = Bodies.polygon(500,300,3,5, {id:1001, vertices:[vertex1,vertex2,vertex3]})
+var car = Bodies.polygon(500,300,3,5, {label:"car", vertices:[
+  { x: 95, y: 110 },
+  { x: 105, y: 110 },
+  { x: 100, y: 90 }]})
 
 Events.on(engine, 'beforeUpdate', function() { // No grav for car
     var gravity = engine.world.gravity;
