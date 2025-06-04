@@ -12,44 +12,123 @@
         Bodies = Matter.Bodies;
 
 var engine = Engine.create()
-var score = 0
 var render = Render.create({
   element : document.body,
   engine : engine,
   options: {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 1000,
+    height: 600,
     wireframes: false
   }
 })
-
-var lostPoint = 0x0001,
-    gainPoint = 0x0002
 
 function randomInt(highest) {
   return Math.floor(Math.random() * highest)+1
 }
 
-var catcher = Bodies.rectangle(400,550,200,20, {isStatic:true, render: {fillStyle:"white", strokeStyle:"gray", lineWidth: 3}, label:"catcher", id: 1001})
-//var ground = Bodies.rectangle(400, 800, 5000, 20, {isStatic:true, render: {fillStyle:"red"}, label:"ground"})
+var vertex1 = { x: 95, y: 110 },
+    vertex2 = { x: 105, y: 110 },
+    vertex3 = { x: 100, y: 90 }
 
-Composite.add(engine.world, catcher)
 
-Events.on(engine, 'collisionStart', function(event) {
-  var pairs = event.pairs.slice()
-  var obj1 = pairs[0].bodyA
-  var obj2 = pairs[0].bodyB
-    if (obj1.label == "catcher") {
-      Composite.remove(engine.world, obj2)
-      score++
-      document.getElementById("score").innerHTML = "Score: " + score
-    } else if (obj2.label == "catcher") {
-    Composite.remove(engine.world, obj1)
-    score++
-    document.getElementById("score").innerHTML = "Score: " + score
-  }
+
+var car = Bodies.polygon(500,300,3,5, {id:1001, vertices:[vertex1,vertex2,vertex3]})
+
+Events.on(engine, 'beforeUpdate', function() { // No grav for car
+    var gravity = engine.world.gravity;
+    var livecar = Composite.get(engine.world, 1001, "body")    
+
+        Body.applyForce(livecar, livecar.position, {
+            x: -gravity.x * gravity.scale * livecar.mass,
+            y: -gravity.y * gravity.scale * livecar.mass
+        });
 });
 
+document.addEventListener("keydown", (event) => {
+    if (event.key == "ArrowLeft") {
+        leftHeld = true
+        document.getElementById("key").innerHTML = "left"
+    } else if (event.key == "ArrowRight") {
+        rightHeld = true
+        document.getElementById("key").innerHTML = "right"
+    } else if (event.key == "ArrowUp") {
+        upHeld = true
+        document.getElementById("key").innerHTML = "up"
+    }
+}) 
+
+document.addEventListener("keyup", (event) => {
+    if (event.key == "ArrowLeft") {
+        leftHeld = false
+        document.getElementById("key").innerHTML = "none"
+    } else if (event.key == "ArrowRight") {
+        rightHeld = false
+        document.getElementById("key").innerHTML = "none"
+    } else if (event.key == "ArrowUp") {
+        upHeld = false
+        document.getElementById("key").innerHTML = "none"
+    }
+})
+
+const keyHandlers = {
+  KeyD: () => {
+    Body.setAngularVelocity(car, 0.035)
+  },
+  KeyA: () => {
+    Body.setAngularVelocity(car, -0.035)
+  },
+  KeyW: () => {
+    var forceMult = -0.00005
+    var xForce = forceMult*Math.cos(car.angle + Math.PI/2)
+    var yForce = forceMult*Math.sin(car.angle + Math.PI/2)
+    Body.applyForce(car, {x: car.position.x, y: car.position.y}, {x: xForce, y: yForce})
+  },
+  KeyS: () => {
+    var forceMult = 0.00005
+    var xForce = forceMult * Math.cos(car.angle + Math.PI/2)
+    var yForce = forceMult * Math.sin(car.angle + Math.PI/2)
+    Body.applyForce(car, car.position, {x: xForce, y: yForce})
+  },
+  KeyE: () => {
+    Body.setSpeed(car, 0)
+    Body.setAngularSpeed(car, 0)
+  },
+  KeyZ: () => {
+    Body.setPosition(car, {x:500,y:300})
+  }
+};
+
+const keysDown = new Set();
+document.addEventListener("keydown", event => {
+  keysDown.add(event.code);
+});
+document.addEventListener("keyup", event => {
+  keysDown.delete(event.code);
+});
+
+Matter.Events.on(engine, "beforeUpdate", event => {
+  [...keysDown].forEach(k => {
+    keyHandlers[k]?.();
+  });
+});
+
+var upperWall = Bodies.rectangle(500,0,1000,10,{isStatic:true, label:"wall"})
+var lowerWall = Bodies.rectangle(500,600, 1000, 10, {isStatic:true, label:"wall"})
+var leftWall = Bodies.rectangle(0,300,10,600, {isStatic:true, label:"wall"})
+var rightWall = Bodies.rectangle(1000,300,10,600, {isStatic:true, label:"wall"})
+
+Composite.add(engine.world, [upperWall,lowerWall,leftWall,rightWall])
+
+Events.on(engine, "collisionStart", function(event) {
+    var pairs = event.pairs.slice()
+  var obj1 = pairs[0].bodyA
+  var obj2 = pairs[0].bodyB
+  if (obj1.label == "wall") {
+      Body.setPosition(car, {x:500, y:300})
+    } else if (obj2.label == "wall") {
+    Body.setPosition(car, {x:500, y:300})
+  }
+})
 
     var mouse = Mouse.create(render.canvas),
         mouseConstraint = MouseConstraint.create(engine, {
@@ -67,15 +146,7 @@ Events.on(engine, 'collisionStart', function(event) {
     // keep the mouse in sync with rendering
     render.mouse = mouse;
 
-let spawner = setInterval(() => {
-  var newfruit = Bodies.circle(randomInt(1000) + 200, 100, 30, {label:"fruit"})
-  Composite.add(engine.world, newfruit)
-}, 250);
-
-let mover = setInterval(() => {
-  var liveCatcher = Composite.get(engine.world, 1001, "body")
-  Body.setPosition(liveCatcher, {x: mouse.position.x, y: 550})
-}, 10);
+Composite.add(engine.world, car)
 
 Render.run(render)
 
