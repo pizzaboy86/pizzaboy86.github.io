@@ -11,7 +11,12 @@
         Composite = Matter.Composite,
         Bodies = Matter.Bodies;
 
-var engine = Engine.create()
+var engine = Engine.create({
+  gravity : {
+    x : 0,
+    y : 0
+  }
+})
 var render = Render.create({
   element : document.body,
   engine : engine,
@@ -26,22 +31,9 @@ function randomInt(highest) {
   return Math.floor(Math.random() * highest)+1
 }
 
-
-
-
 var car = Bodies.polygon(20,20,3,5, {id:1001, vertices:[{ x: 95, y: 110 },
   { x: 105, y: 110 },
   { x: 100, y: 90 }]})
-
-Events.on(engine, 'beforeUpdate', function() { // No grav for car
-    var gravity = engine.world.gravity;
-    var livecar = Composite.get(engine.world, 1001, "body")    
-
-        Body.applyForce(livecar, livecar.position, {
-            x: -gravity.x * gravity.scale * livecar.mass,
-            y: -gravity.y * gravity.scale * livecar.mass
-        });
-});
 
 const keyHandlers = {
   KeyD: () => {
@@ -68,6 +60,14 @@ const keyHandlers = {
   },
   KeyZ: () => {
     Body.setPosition(car, {x:500,y:300})
+  },
+  KeyF: () => {
+    let shot = Bodies.rectangle(car.position.x + 50, car.position.y, 20, 10, {angle:car.angle})
+    Composite.add(engine.world, shot)
+    var forceMult = 0.005
+    var xForce = forceMult * Math.cos(shot.angle)
+    var yForce = forceMult * Math.sin(shot.angle)
+    Body.applyForce(shot, shot.position, {x: xForce, y: yForce})
   }
 };
 
