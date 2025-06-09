@@ -41,13 +41,9 @@ var car = Bodies.polygon(20,20,3,5, {id:1001, vertices:[{ x: 95, y: 110 },
   { x: 100, y: 90 }],
   collisionFilter: {group:-1}})
 
+var shotOnCd = false
+
 const keyHandlers = {
-  KeyD: () => {
-    Body.setAngularVelocity(car, 0.035)
-  },
-  KeyA: () => {
-    Body.setAngularVelocity(car, -0.035)
-  },
   KeyW: () => {
     var forceMult = -0.00005
     var xForce = forceMult*Math.cos(car.angle + Math.PI/2)
@@ -68,12 +64,21 @@ const keyHandlers = {
     Body.setPosition(car, {x:500,y:300})
   },
   KeyF: () => {
+    if (!shotOnCd) {
     let shot = Bodies.rectangle(car.position.x, car.position.y, 20, 10, {angle:car.angle + Math.PI / 2, collisionFilter: {group:-1}, label: "playerShot"})
     Composite.add(engine.world, shot)
-    var forceMult = 0.005 * 10
+    var forceMult = 0.005
     var xForce = forceMult * Math.cos(car.angle - Math.PI / 2)
     var yForce = forceMult * Math.sin(car.angle - Math.PI / 2)
     Body.applyForce(shot, shot.position, {x: xForce, y: yForce})
+    var backXForce = 0.0005 * Math.cos(-car.angle - Math.PI / 2)
+    var backYForce = 0.0005 * Math.sin(-car.angle - Math.PI / 2)
+    Body.applyForce(car, car.position, {x: backXForce, y: backYForce})
+    shotOnCd = true
+    setTimeout(() => {
+      shotOnCd = false
+    },500)
+    }
   }
 };
 
@@ -120,7 +125,7 @@ Composite.add(engine.world,enemy)
     }
   }
   })
-}, 1000)
+}, 5000)
 
 var upperWall = Bodies.rectangle(500,0,1000,10,{isStatic:true, label:"wall"})
 var lowerWall = Bodies.rectangle(500,600, 1000, 10, {isStatic:true, label:"wall"})
@@ -148,7 +153,7 @@ Composite.add(engine.world, [upperWall,lowerWall,leftWall,rightWall])
 Composite.add(engine.world, car)
 
 let followMouse = setInterval(() => {
-  car.angle = Math.atan2(mouse.position.y-car.position.y, mouse.position.x-car.position.x) + Math.PI/2
+   car.angle = Math.atan2(mouse.position.y-car.position.y, mouse.position.x-car.position.x) + Math.PI/2
 },10)
 
 
