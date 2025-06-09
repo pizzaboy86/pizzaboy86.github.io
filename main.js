@@ -17,6 +17,7 @@ var engine = Engine.create({
     y : 0
   }
 })
+var health = 100
 var render = Render.create({
   element : document.body,
   engine : engine,
@@ -27,13 +28,18 @@ var render = Render.create({
   }
 })
 
+function randomId(length) {
+  return Math.random().toString(36).substring(2, length + 2);
+}
+
 function randomInt(highest) {
   return Math.floor(Math.random() * highest)+1
 }
 
 var car = Bodies.polygon(20,20,3,5, {id:1001, vertices:[{ x: 95, y: 110 },
   { x: 105, y: 110 },
-  { x: 100, y: 90 }]})
+  { x: 100, y: 90 }],
+  collisionFilter: {group:-1}})
 
 const keyHandlers = {
   KeyD: () => {
@@ -62,11 +68,11 @@ const keyHandlers = {
     Body.setPosition(car, {x:500,y:300})
   },
   KeyF: () => {
-    let shot = Bodies.rectangle(car.position.x + 50, car.position.y, 20, 10, {angle:car.angle})
+    let shot = Bodies.rectangle(car.position.x, car.position.y, 20, 10, {angle:car.angle + Math.PI / 2, collisionFilter: {group:-1}, label: "playerShot"})
     Composite.add(engine.world, shot)
     var forceMult = 0.005
-    var xForce = forceMult * Math.cos(shot.angle)
-    var yForce = forceMult * Math.sin(shot.angle)
+    var xForce = forceMult * Math.cos(car.angle - Math.PI / 2)
+    var yForce = forceMult * Math.sin(car.angle - Math.PI / 2)
     Body.applyForce(shot, shot.position, {x: xForce, y: yForce})
   }
 };
@@ -84,6 +90,37 @@ Matter.Events.on(engine, "beforeUpdate", event => {
     keyHandlers[k]?.();
   });
 });
+
+let enemyInt = setInterval(() => {
+var enemyId = randomId(12)
+var enemy = Bodies.circle(randomInt(800) + 100, randomInt(400) + 100, 10, {render: {fillStyle:"red", strokeStyle:"black"}, collisionFilter: {group:-2}, label: "enemy", id:enemyId})
+Composite.add(engine.world,enemy)
+  let shootInt = setInterval(() => {
+    var shotId = randomId(15)
+    var fetchedEnemy = Composite.get(engine.world,enemyId,"body")
+    var atkAngle = Math.atan2(car.position.y-fetchedEnemy.position.y, car.position.x-fetchedEnemy.position.y) 
+    let enemyShot = Bodies.rectangle(fetchedEnemy.position.x, fetchedEnemy.position.y, 20,10, {angle:atkAngle, render: {fillStyle:"red", strokeStyle:"black"}, collisionFilter: {group:-2}, id:shotId, label:"enemyShot"})
+    var forceMult = 0.005
+    var xForce = forceMult * Math.cos(atkAngle)
+    var yForce = forceMult * Math.sin(atkAngle)
+    Composite.add(engine.world, enemyShot)
+    var fetchedShot = Composite.get(engine.world,shotId,"body")
+    Body.applyForce(fetchedShot, fetchedShot.position, {x: xForce, y: yForce})
+  }, 100)
+  Events.on(engine, "collisionStart", (e) => {
+    for (const {bodyA, bodyB} of e.pairs) {
+    if (bodyA.label === "playerShot" & bodyB.label === "enemy") {
+      Composite.remove(engine.world, bodyB)
+      Composite.remove(engine.world, bodyA)
+      clearInterval(shootInt)
+    } else if (bodyB.label === "playerShot" & bodyA.label === "enemy") {
+      Composite.remove(engine.world, bodyA)
+      Composite.remove(engine.world, bodyB)
+      clearInterval(shootInt)
+    }
+  }
+  })
+}, 1000)
 
 var upperWall = Bodies.rectangle(500,0,1000,10,{isStatic:true, label:"wall"})
 var lowerWall = Bodies.rectangle(500,600, 1000, 10, {isStatic:true, label:"wall"})
