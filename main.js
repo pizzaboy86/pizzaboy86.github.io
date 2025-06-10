@@ -1,4 +1,7 @@
 'use strict';
+
+const { Contact } = require("matter-js");
+
     var Engine = Matter.Engine,
         Render = Matter.Render,
         Runner = Matter.Runner,
@@ -27,19 +30,52 @@ var render = Render.create({
     wireframes: false
   }
 })
+var enemyTypes = [
+  { Name: "Basic",
+    Rarity: 50,
+    Bullets: 1,
+    Reload: 500,
+    BulletSpeed: 0.005,
+    BulletLifetime: 2500,
+    CanMove: false,
+    ContactDmg: 1,
+    ContactCd: 250,
+    Shape: "Circle",
+    Color: "Red"
+  },
+  { Name: "Wave",
+    Rarity: 25,
+    Bullets: 30,
+    Reload: 2500,
+    BulletSpeed: 0.002,
+    BulletLifetime: 5000,
+    CanMove: false,
+    ContactDmg: 1,
+    ContactCd: 250,
+    Shape: "Circle",
+    Color: "Gray"
+  }
+]
+updateScreen()
 
 function randomId(length) {
   return Math.random().toString(36).substring(2, length + 2);
 }
 
 function randomInt(highest) {
-  return Math.floor(Math.random() * highest)+1
+  return Math.floor(Math.random() * highest)
+}
+
+function randomIntRange(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 var car = Bodies.polygon(20,20,3,5, {id:1001, vertices:[{ x: 95, y: 110 },
   { x: 105, y: 110 },
   { x: 100, y: 90 }],
-  collisionFilter: {group:-1}})
+  collisionFilter: {group:-1}, label:"player"})
 
 var shotOnCd = false
 
@@ -65,19 +101,22 @@ const keyHandlers = {
   },
   KeyF: () => {
     if (!shotOnCd) {
-    let shot = Bodies.rectangle(car.position.x, car.position.y, 20, 10, {angle:car.angle + Math.PI / 2, collisionFilter: {group:-1}, label: "playerShot"})
+    for (let i=0; i<20; i++) {
+    var randomAngle = (randomIntRange(-15,15) * Math.PI/180) + car.angle
+    let shot = Bodies.rectangle(car.position.x, car.position.y, 20, 10, {angle:randomAngle + Math.PI / 2, collisionFilter: {group:-1}, label: "playerShot"})
     Composite.add(engine.world, shot)
     var forceMult = 0.005
-    var xForce = forceMult * Math.cos(car.angle - Math.PI / 2)
-    var yForce = forceMult * Math.sin(car.angle - Math.PI / 2)
+    var xForce = forceMult * Math.cos(randomAngle - Math.PI / 2)
+    var yForce = forceMult * Math.sin(randomAngle - Math.PI / 2)
     Body.applyForce(shot, shot.position, {x: xForce, y: yForce})
-    var backXForce = 0.0005 * Math.cos(-car.angle - Math.PI / 2)
-    var backYForce = 0.0005 * Math.sin(-car.angle - Math.PI / 2)
-    Body.applyForce(car, car.position, {x: backXForce, y: backYForce})
+    setTimeout(() => {
+      Composite.remove(engine.world,shot)
+    },2500)
+    }
     shotOnCd = true
     setTimeout(() => {
       shotOnCd = false
-    },500)
+    },450)
     }
   }
 };
@@ -97,23 +136,39 @@ Matter.Events.on(engine, "beforeUpdate", event => {
 });
 
 let enemyInt = setInterval(() => {
-var enemyId = randomId(12)
-var enemyPosX = randomInt(800) + 100
-var enemyPosY = randomInt(400) + 100
-var enemy = Bodies.circle(enemyPosX, enemyPosY, 10, {render: {fillStyle:"red", strokeStyle:"black"}, collisionFilter: {group:-2}, label: "enemy", id:enemyId})
-Composite.add(engine.world,enemy)
-  let shootInt = setInterval(() => {
+  spawnEnemy(0)
+}, 3000)
+
+function spawnEnemy(index) {
+  var enemy
+  var chosenEnemy = enemyTypes[index]
+  var enemyId = randomId(12)
+  var enemyPosX = randomInt(800) + 100
+  var enemyPosY = randomInt(400) + 100
+  if (chosenEnemy.Shape == "Circle") {
+    enemy = Bodies.circle(enemyPosX, enemyPosY, 10, {render: {fillStyle:chosenEnemy.Color, strokeStyle:"Black"}, collisionFilter: {group:-2}, label: "enemy", id:enemyId})
+  }
+  Composite.add(engine.world, enemy)
+   let shootInt = setInterval(() => {
+    for (let i=0; i<chosenEnemy.Bullets; i++) {
     var shotId = randomId(15)
     var fetchedEnemy = Composite.get(engine.world,enemyId,"body")
     var atkAngle = Math.atan2(car.position.y-enemyPosY, car.position.x-enemyPosX) 
     let enemyShot = Bodies.rectangle(fetchedEnemy.position.x, fetchedEnemy.position.y, 20,10, {angle:atkAngle, render: {fillStyle:"red", strokeStyle:"black"}, collisionFilter: {group:-2}, id:shotId, label:"enemyShot"})
-    var forceMult = 0.005
+    var forceMult = chosenEnemy.BulletSpeed
     var xForce = forceMult * Math.cos(atkAngle)
     var yForce = forceMult * Math.sin(atkAngle)
     Composite.add(engine.world, enemyShot)
     var fetchedShot = Composite.get(engine.world,shotId,"body")
     Body.applyForce(fetchedShot, fetchedShot.position, {x: xForce, y: yForce})
-  }, randomInt(200) + 800)
+    setTimeout(() => {
+      Composite.remove(engine.world,enemyShot)
+    }, chosenEnemy.BulletLifetime)
+    }
+  }, chosenEnemy.Reload)
+}
+
+
   Events.on(engine, "collisionStart", (e) => {
     for (const {bodyA, bodyB} of e.pairs) {
     if (bodyA.label === "playerShot" & bodyB.label === "enemy") {
@@ -125,7 +180,17 @@ Composite.add(engine.world,enemy)
     }
   }
   })
-}, 5000)
+    Events.on(engine, "collisionStart", (e) => {
+    for (const {bodyA, bodyB} of e.pairs) {
+    if (bodyA.label === "player" & bodyB.label === "enemyShot") {
+      Composite.remove(engine.world, bodyB)
+      health--
+    } else if (bodyB.label === "player" & bodyA.label === "enemyShot") {
+      Composite.remove(engine.world, bodyA)
+      health--
+    }
+  }
+  })
 
 var upperWall = Bodies.rectangle(500,0,1000,10,{isStatic:true, label:"wall"})
 var lowerWall = Bodies.rectangle(500,600, 1000, 10, {isStatic:true, label:"wall"})
@@ -153,9 +218,12 @@ Composite.add(engine.world, [upperWall,lowerWall,leftWall,rightWall])
 Composite.add(engine.world, car)
 
 let followMouse = setInterval(() => {
-   car.angle = Math.atan2(mouse.position.y-car.position.y, mouse.position.x-car.position.x) + Math.PI/2
+  car.angle = Math.atan2(mouse.position.y-car.position.y, mouse.position.x-car.position.x) + Math.PI/2
 },10)
 
+function updateScreen() {
+  document.getElementById("hp").innerHTML = "Health: " + health
+}
 
 Render.run(render)
 
