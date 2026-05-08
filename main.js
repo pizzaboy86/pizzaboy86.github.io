@@ -4,7 +4,7 @@ var items = [
   { Color: "Green", Value: 2, Odds: 4 },
   { Color: "Blue", Value: 3.5, Odds: 12 },
   { Color: "Red", Value: 5, Odds: 48 },
-  { Color: "Gold", Value: 10, Odds: 1 }
+  { Color: "Gold", Value: 10, Odds: 100 }
 ]
 var rewards = [
   { Name: "<span style='color:Gold'>Jackpot!</span>", Value: 30, Tag: "jackpot"},
